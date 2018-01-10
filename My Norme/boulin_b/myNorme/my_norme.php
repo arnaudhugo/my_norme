@@ -1,7 +1,10 @@
 #!/bin/env php
 <?php
 // Mettre dans un tableau tout les nom des fichier en fonction du repertoire
-run($argv[1]);
+if (!empty($argv[1]))
+    run($argv[1]);
+else
+    echo "\033[31mErreur : Mauvaise commande, utilisez -h. \033[0m \n";
 
 function run($way) {
     $list_file = array();
@@ -14,6 +17,10 @@ function run($way) {
                     $extension = end($t);
                     if ($extension == "c" || $extension == "h") {
                         array_push($list_file, $file);
+                    }
+                    else {
+                        echo "\033[31mErreur : Aucun fichier .c ou .h dans le répertoire. \033[0m \n";
+                        return;
                     }
                 }
             }
