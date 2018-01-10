@@ -161,11 +161,12 @@ function start_scan($list_file, $way)
                 // ==========
 
                 // ===== Saut de ligne apres declaration
-                $dec = preg_match('(^.+[a-zA-Z].=)', $line_content);
+                $dec = preg_match('([a-zA-Z].=)', $line_content);
                 if ($dec == 1) {
                     $check_next = TRUE;
                 }
                 if ($check_next == TRUE && $dec != 1 && $line_content != "\n") {
+                    $nbr_line = $nbr_line-1;
                     echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Pas de saut de ligne après les déclarations\n";
                     $check_next = FALSE;
                     $nbr_error++;
