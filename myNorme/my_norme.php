@@ -170,17 +170,6 @@ function start_scan($list_file, $way)
                     $nbr_error++;
                 // ==========
 
-                // ===== Double retour à la ligne
-                if ($line_content == "\n" && $tmp_line == 0) {
-                    $tmp_line = $nbr_line;
-                }
-                if ($line_content == "\n" && $tmp_line == $nbr_line - 1) {
-                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Double retour à la ligne. \n";
-                    $nbr_error++;
-                    $tmp_line = 0;
-                }
-                // ==========
-
                 // ===== Ligne de plus de 80 caractères
                 if (too_much_charac($line_content, $file_name, $nbr_line))
                     $nbr_error++;
@@ -205,6 +194,10 @@ function start_scan($list_file, $way)
                     $nbr_error++;
                 // ==========
 
+                // ===== Mauvais header / Triche Edouard MOULINETTE
+                $nbr_error += verif_header($line_content, $file_name, $nbr_line, $list_file);
+                // =========
+
                 // ===== Saut de ligne après les déclarations
                 $dec = preg_match('([a-zA-Z].=)', $line_content);
                 if ($dec == 1) {
@@ -218,9 +211,16 @@ function start_scan($list_file, $way)
                 }
                 // ==========
 
-                // ===== Mauvais header / Triche Edouard MOULINETTE
-                $nbr_error += verif_header($line_content, $file_name, $nbr_line, $list_file);
-                // =========
+                // ===== Double retour à la ligne
+                if ($line_content == "\n" && $tmp_line == 0) {
+                    $tmp_line = $nbr_line;
+                }
+                if ($line_content == "\n" && $tmp_line == $nbr_line - 1) {
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Double retour à la ligne. \n";
+                    $nbr_error++;
+                    $tmp_line = 0;
+                }
+                // ==========
 
                 // ===== Fonctions de plus de 25 lignes & Nombre de fonctions par fichier
                 if (preg_match('/^{/', $line_content) && $in_func == FALSE) {
