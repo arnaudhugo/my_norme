@@ -86,20 +86,73 @@ function space_miss_after_comma($line_content, $file_name, $nbr_line) {
     return($error);
 }
 
+function declaration_affectation($line_content, $file_name, $nbr_line) {
+    $declaration = preg_match('(char|int|float|double)', $line_content);
+    $affectation = preg_match('(=)', $line_content);
+    if ($declaration == 1 && $affectation == 1) {
+        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Déclaration et affectation sur la même ligne. \n";
+        return(true);
+    }
+    return(false);
+}
+
+function tabulation_in_declaration($line_content, $file_name, $nbr_line) {
+    $declaration = preg_match('(char|int|float|double|void)', $line_content);
+    $tabulation = preg_match('(\t)', $line_content);
+    if ($declaration == 1 && $tabulation != 1) {
+        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Pas de tabulation dans une déclaration. \n";
+        return(true);
+    }
+    return(false);
+}
+
+function verif_header($line_content, $file_name, $nbr_line, $list_file) {
+    $error = 0;
+    if (sizeof($list_file) != 0) {
+        if ($nbr_line >= 2 && $nbr_line <= 8) {
+            if (preg_match('(\*\*)', $line_content) == 1) {
+                if (preg_match('(moulin_e@etna-alternance.net)', $line_content)) {
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : TRICHE (moulin_e@etna-alternance.net). \n";
+                    $error++;
+                }
+                if (preg_match('(MOULINETTE Edouard)', $line_content)) {
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : TRICHE (MOULINETTE Edouard). \n";
+                    $error++;
+                }
+            } else {
+                echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Header oublié. \n";
+                $error++;
+            }
+        }
+        if ($nbr_line == 1 || $nbr_line == 9) {
+            $l1 = preg_match('(\/\*)', $line_content);
+            $l9 = preg_match('(\*\/)', $line_content);
+            if ($nbr_line == 1 && $l1 != 1) {
+                echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Header oublié. \n";
+                $error++;
+            }
+            if ($nbr_line == 9 && $l9 != 1) {
+                echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Header oublié. \n";
+                $error++;
+            }
+        }
+    }
+    return($error);
+}
+
 // Verification
 function start_scan($list_file, $way)
 {
     $nbr_error = 0;
-    $nbr_dossier = 0;
 
     for ($i = 0; $i < count($list_file); $i++) {
         $in_func = FALSE;
+        $check_next = FALSE;
         $line_in_func = 0;
         $nbr_func = 0;
         $tmp_line = 0;
-        $check_next = FALSE;
-        echo "\nScan: $list_file[$i] \n";
         $selected_file = $way . $list_file[$i];
+        echo "\nScan: $list_file[$i] \n";
 
         if (is_readable($selected_file)) {
             $line = file($selected_file);
@@ -122,7 +175,7 @@ function start_scan($list_file, $way)
                     $tmp_line = $nbr_line;
                 }
                 if ($line_content == "\n" && $tmp_line == $nbr_line - 1) {
-                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Double retour à la ligne. \n";
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Double retour à la ligne. \n";
                     $nbr_error++;
                     $tmp_line = 0;
                 }
@@ -142,67 +195,31 @@ function start_scan($list_file, $way)
                 $nbr_error += space_miss_after_comma($line_content, $file_name, $nbr_line);
                 // ==========
 
-                // ===== Declaration / affectation meme ligne
-                $d = preg_match('(char|int|float|double)', $line_content);
-                $a = preg_match('(=)', $line_content);
-                if ($d == 1 && $a == 1) {
-                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Declaration et Affectation sur la même ligne\n";
+                // ===== Déclaration et affectation sur la même ligne
+                if (declaration_affectation($line_content, $file_name, $nbr_line))
                     $nbr_error++;
-                }
                 // ==========
 
-                // ===== Tabulation sur declaration
-                $decla = preg_match('(char|int|float|double|void)', $line_content);
-                $tab = preg_match('(\t)', $line_content);
-                if ($decla == 1 && $tab != 1) {
-                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Pas de tabulations dans les déclarations\n";
+                // ===== Tabulation dans les déclarations
+                if (tabulation_in_declaration($line_content, $file_name, $nbr_line))
                     $nbr_error++;
-                }
                 // ==========
 
-                // ===== Saut de ligne apres declaration
+                // ===== Saut de ligne après les déclarations
                 $dec = preg_match('([a-zA-Z].=)', $line_content);
                 if ($dec == 1) {
                     $check_next = TRUE;
                 }
                 if ($check_next == TRUE && $dec != 1 && $line_content != "\n") {
-                    $nbr_line = $nbr_line-1;
-                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Pas de saut de ligne après les déclarations\n";
+                    $nbr_line = $nbr_line - 1;
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Pas de saut de ligne après une déclaration. \n";
                     $check_next = FALSE;
                     $nbr_error++;
                 }
                 // ==========
 
                 // ===== Mauvais header / Triche Edouard MOULINETTE
-                if ($nbr_dossier != sizeof($list_file)) {
-                    if ($nbr_line >= 2 && $nbr_line <= 8) {
-                        if (preg_match('(\*\*)', $line_content) == 1) {
-                            if (preg_match('(moulin_e@etna-alternance.net)', $line_content)) {
-                                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (moulin_e@etna-alternance.net)\n";
-                                $nbr_error++;
-                            }
-                            if (preg_match('(MOULINETTE Edouard)', $line_content)) {
-                                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (MOULINETTE Edouard) \n";
-                                $nbr_error++;
-                            }
-                        } else {
-                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Header oublié \n";
-                            $nbr_error++;
-                        }
-                    }
-                    if ($nbr_line == 1 || $nbr_line == 9) {
-                        $l1 = preg_match('(\/\*)', $line_content);
-                        $l9 = preg_match('(\*\/)', $line_content);
-                        if ($nbr_line == 1 && $l1 != 1) {
-                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Header oublié \n";
-                            $nbr_error++;
-                        }
-                        if ($nbr_line == 9 && $l9 != 1) {
-                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Header oublié \n";
-                            $nbr_error++;
-                        }
-                    }
-                }
+                $nbr_error += verif_header($line_content, $file_name, $nbr_line, $list_file);
                 // =========
 
                 // ===== Fonctions de plus de 25 lignes & Nombre de fonctions par fichier
@@ -217,7 +234,7 @@ function start_scan($list_file, $way)
                         $line_in_func = $line_in_func + 1;
                     }
                     if ($line_in_func > 25) {
-                        echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Fonctions de plus de 25 lignes. \n";
+                        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Fonctions de plus de 25 lignes. \n";
                         $nbr_error++;
                     }
                 }
@@ -226,14 +243,14 @@ function start_scan($list_file, $way)
                 // ===== Plus de 4 paramètres pour une fonction
                 $nbr_param = explode(',', $line_content);
                 if (count($nbr_param) > 4) {
-                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Plus de 4 paramètres pour une fonction. \n";
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Plus de 4 paramètres pour une fonction. \n";
                     $nbr_error++;
                 }
                 // ==========
             }
             // ===== Show NbFunc
             if ($nbr_func > 5) {
-                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Il y a $nbr_func function dans le fichier. \n";
+                echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Il y a $nbr_func function dans le fichier. \n";
                 $nbr_error++;
                 $nbr_func = 0;
             }
