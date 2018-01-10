@@ -80,6 +80,7 @@ function space_miss_after_comma($line_content, $file_name, $nbr_line) {
                 echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Espace manquant après virgule. \n";
                 $error++;
             }
+
         }
     }
     return($error);
