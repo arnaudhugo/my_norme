@@ -9,7 +9,6 @@
 // Last update Wed Jan  10 16:49:21 2018 ARNAUD Hugo
 //
 
-// Mettre dans un tableau tout les nom des fichier en fonction du repertoire
 if (!empty($argv[1]))
     run($argv[1]);
 else
