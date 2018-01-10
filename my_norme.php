@@ -1,5 +1,14 @@
-#!/bin/env php
+#!/usr/bin/env php
 <?php
+// my_norme.php for  in /Users/arnaud_h/my_norme
+//
+// Made by ARNAUD Hugo
+// Login   <arnaud_h@etna-alternance.net>
+//
+// Started on  Mon Jan  8 9:16:45 2018 ARNAUD Hugo
+// Last update Wed Jan  10 16:49:21 2018 ARNAUD Hugo
+//
+
 // Mettre dans un tableau tout les nom des fichier en fonction du repertoire
 if (!empty($argv[1]))
     run($argv[1]);
