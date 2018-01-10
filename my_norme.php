@@ -244,7 +244,7 @@ function start_scan($list_file, $way)
                 // ==========
 
                 // ===== Fonctions de plus de 25 lignes & Nombre de fonctions par fichier
-                if (preg_match('/^{/', $line_content) && $in_func == FALSE) {
+                if (preg_match('/{/', $line_content) && $in_func == FALSE) {
                     $in_func = TRUE;
                 } elseif (preg_match('/^}/', $line_content)) {
                     $in_func = FALSE;
