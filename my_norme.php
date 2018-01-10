@@ -225,8 +225,8 @@ function start_scan($list_file, $way)
                     $check_next = TRUE;
                 }
                 if ($check_next == TRUE && $dec != 1 && $line_content != "\n") {
-                    $nbr_linebis = $nbr_line - 1;
-                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_linebis : Pas de saut de ligne après une déclaration. \n";
+                    $nbr_line_bis = $nbr_line - 1;
+                    echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line_bis : Pas de saut de ligne après une déclaration. \n";
                     $check_next = FALSE;
                     $nbr_error++;
                 }
