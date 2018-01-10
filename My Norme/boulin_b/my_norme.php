@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-// my_norme.php for  in /Users/arnaud_h/my_norme
+// my_norme.php for my_norme in /Users/arnaud_h/Documents/my_norme
 //
 // Made by ARNAUD Hugo
 // Login   <arnaud_h@etna-alternance.net>
