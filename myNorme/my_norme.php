@@ -18,10 +18,6 @@ function run($way) {
                     if ($extension == "c" || $extension == "h") {
                         array_push($list_file, $file);
                     }
-                    else {
-                        echo "\033[31mErreur : Aucun fichier .c ou .h dans le répertoire. \033[0m \n";
-                        return;
-                    }
                 }
             }
             closedir($dh);
@@ -90,7 +86,8 @@ function space_miss_after_comma($line_content, $file_name, $nbr_line) {
 }
 
 // Verification
-function start_scan($list_file, $way) {
+function start_scan($list_file, $way)
+{
     $nbr_error = 0;
     $nbr_dossier = 0;
 
@@ -99,113 +96,112 @@ function start_scan($list_file, $way) {
         $line_in_func = 0;
         $nbr_func = 0;
         $tmp_line = 0;
-        $selected_file = $way . $list_file[$i];
-        $line = file($selected_file);
         echo "\nScan: $list_file[$i] \n";
+        $selected_file = $way . $list_file[$i];
 
-        foreach ($line as $nbr_line => $line_content) {
-            $nbr_line = $nbr_line + 1;
-            $file_name = $list_file[$i];
+        if (is_readable($selected_file)) {
+            $line = file($selected_file);
+            foreach ($line as $nbr_line => $line_content) {
+                $nbr_line = $nbr_line + 1;
+                $file_name = $list_file[$i];
 
-            // ===== Define dans un C
-            if (define_in_c($line_content, $file_name, $nbr_line))
-                $nbr_error++;
-            // =========
+                // ===== Define dans un C
+                if (define_in_c($line_content, $file_name, $nbr_line))
+                    $nbr_error++;
+                // =========
 
-            // ===== Espace en fin de ligne
-            if (space_end($line_content, $file_name, $nbr_line))
-                $nbr_error++;
-            // ==========
+                // ===== Espace en fin de ligne
+                if (space_end($line_content, $file_name, $nbr_line))
+                    $nbr_error++;
+                // ==========
 
-            // ===== Double retour à la ligne
-            if ($line_content == "\n" && $tmp_line == 0) {
-                $tmp_line = $nbr_line;
-            }
-            if ($line_content == "\n" && $tmp_line == $nbr_line - 1) {
-                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Double retour à la ligne. \n";
-                $nbr_error++;
-                $tmp_line = 0;
-            }
-            // ==========
+                // ===== Double retour à la ligne
+                if ($line_content == "\n" && $tmp_line == 0) {
+                    $tmp_line = $nbr_line;
+                }
+                if ($line_content == "\n" && $tmp_line == $nbr_line - 1) {
+                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Double retour à la ligne. \n";
+                    $nbr_error++;
+                    $tmp_line = 0;
+                }
+                // ==========
 
-            // ===== Ligne de plus de 80 caractères
-            if (too_much_charac($line_content, $file_name, $nbr_line))
-                $nbr_error++;
-            // ==========
+                // ===== Ligne de plus de 80 caractères
+                if (too_much_charac($line_content, $file_name, $nbr_line))
+                    $nbr_error++;
+                // ==========
 
-            // ===== Espace manquant après mot clé
-            if (space_miss_after_key_word($line_content, $file_name, $nbr_line))
-                $nbr_error++;
-            // ==========
+                // ===== Espace manquant après mot clé
+                if (space_miss_after_key_word($line_content, $file_name, $nbr_line))
+                    $nbr_error++;
+                // ==========
 
-            // ===== Espace manquant après virgule
-            $nbr_error += space_miss_after_comma($line_content, $file_name, $nbr_line);
-            // ==========
+                // ===== Espace manquant après virgule
+                $nbr_error += space_miss_after_comma($line_content, $file_name, $nbr_line);
+                // ==========
 
-            // ===== Mauvais header / Triche Edouard MOULINETTE
-            if ($nbr_dossier != sizeof($list_file)) {
-                if ($nbr_line >= 3 && $nbr_line <= 10) {
-                    if (preg_match('(\/\/)', $line_content) == 1) {
-                        if (preg_match('(moulin_e@etna-alternance.net)', $line_content)) {
-                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (moulin_e@etna-alternance.net). \n";
-                            $nbr_error++;
-                        }
-                        if (preg_match('(MOULINETTE Edouard)', $line_content)) {
-                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (MOULINETTE Edouard). \n";
+                // ===== Mauvais header / Triche Edouard MOULINETTE
+                if ($nbr_dossier != sizeof($list_file)) {
+                    if ($nbr_line >= 3 && $nbr_line <= 10) {
+                        if (preg_match('(\/\/)', $line_content) == 1) {
+                            if (preg_match('(moulin_e@etna-alternance.net)', $line_content)) {
+                                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (moulin_e@etna-alternance.net). \n";
+                                $nbr_error++;
+                            }
+                            if (preg_match('(MOULINETTE Edouard)', $line_content)) {
+                                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (MOULINETTE Edouard). \n";
+                                $nbr_error++;
+                            }
+                        } else {
+                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Header oublié. \n";
                             $nbr_error++;
                         }
                     }
-                    else {
-                        echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Header oublié. \n";
+                }
+                // =========
+
+                // ===== Fonctions de plus de 25 lignes & Nombre de fonctions par fichier
+                if (preg_match('/^{/', $line_content) && $in_func == FALSE) {
+                    $in_func = TRUE;
+                } elseif (preg_match('/^}/', $line_content)) {
+                    $in_func = FALSE;
+                    $nbr_func = $nbr_func + 1;
+                    $line_in_func = 0;
+                } else {
+                    if ($in_func == TRUE) {
+                        $line_in_func = $line_in_func + 1;
+                    }
+                    if ($line_in_func > 25) {
+                        echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Fonctions de plus de 25 lignes. \n";
                         $nbr_error++;
                     }
                 }
-            }
-            // =========
+                // ==========
 
-            // ===== Fonctions de plus de 25 lignes & Nombre de fonctions par fichier
-            if (preg_match('/^{/', $line_content) && $in_func == FALSE) {
-                $in_func = TRUE;
-            }
-            elseif (preg_match('/^}/', $line_content)) {
-                $in_func = FALSE;
-                $nbr_func = $nbr_func + 1;
-                $line_in_func = 0;
-            }
-            else {
-                if ($in_func == TRUE) {
-                    $line_in_func = $line_in_func + 1;
-                }
-                if ($line_in_func > 25) {
-                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Fonctions de plus de 25 lignes. \n";
+                // ===== Plus de 4 paramètres pour une fonction
+                $nbr_param = explode(',', $line_content);
+                if (count($nbr_param) > 4) {
+                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Plus de 4 paramètres pour une fonction. \n";
                     $nbr_error++;
                 }
+                // ==========
             }
-            // ==========
-
-            // ===== Plus de 4 paramètres pour une fonction
-            $nbr_param = explode(',', $line_content);
-            if (count($nbr_param) > 4) {
-                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Plus de 4 paramètres pour une fonction. \n";
+            // ===== Show NbFunc
+            if ($nbr_func > 5) {
+                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Il y a $nbr_func function dans le fichier. \n";
                 $nbr_error++;
+                $nbr_func = 0;
             }
             // ==========
         }
-        // ===== Show NbFunc
-        if ($nbr_func > 5) {
-            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Il y a $nbr_func function dans le fichier. \n";
-            $nbr_error++;
-            $nbr_func = 0;
-        }
-        // ==========
+        else
+            echo "\033[31mErreur : Fichier non lisible. \033[0m \n";
     }
     // ===== Show NbError
-    if ($nbr_error == 0) {
+    if ($nbr_error == 0)
         echo "\033[32mAucune fautes de normes\033[0m. \n";
-    }
-    else {
+    else
         echo "Vous avez fait \033[31m$nbr_error\033[0m fautes de norme. \n";
-    }
     // ==========
 }
 ?>
