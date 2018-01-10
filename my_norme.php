@@ -34,13 +34,26 @@ function run($way) {
         }
     }
     elseif ($way == "-h" || $way == "--help") {
-        echo " php my_norme.php [OPTION] | [CHEMIN] \n";
-        echo " -h --help Afficher un message d'aide montrant toutes les fonctions. \n";
-        echo " -c --no-colors Désactiver les couleurs. \n";
-        echo " -M --makefile Activer la vérification du Makefile. \n";
-        echo " -m --malloc Activer la vérification des malloc. \n";
-        echo " -C --comment Activer la vérification des commentaires. \n";
-        echo " -a --authorised Activer la vérification des fonctions autorisées. \n";
+        echo " /********************************************************************\ \n";
+        echo " *                                                                    * \n";
+        echo " *                                                                    * \n";
+        echo " *         My_Norme - Trouver ces fautes de normes rapidement !       * \n";
+        echo " *                                                                    * \n";
+        echo " *                                                                    * \n";
+        echo " *           Developped by : arnaud_h & nienaj_d & boulin_b           * \n";
+        echo " *                                                                    * \n";
+        echo " *                                                                    * \n";
+        echo " \********************************************************************/ \n";
+        echo "\n";
+        echo "              USE: php my_norme.php [OPTION] or <CHEMIN> \n";
+        echo "\n";
+        echo "  -h --help Afficher un message d'aide montrant toutes les fonctions. \n";
+        echo "  -c --no-colors Désactiver les couleurs. \n";
+        echo "  -M --makefile Activer la vérification du Makefile. \n";
+        echo "  -m --malloc Activer la vérification des malloc. \n";
+        echo "  -C --comment Activer la vérification des commentaires. \n";
+        echo "  -a --authorised Activer la vérification des fonctions autorisées. \n";
+        echo "\n";
     }
     else {
         echo "\033[31mErreur : Mauvaise commande, utilisez -h. \033[0m \n";
