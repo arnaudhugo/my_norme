@@ -21,6 +21,7 @@ function run($way) {
         }
     }
     elseif ($way == "-h" || $way == "--help") {
+        echo " php my_norme.php [OPTION] | [CHEMIN] \n";
         echo " -h --help Afficher un message d'aide montrant toutes les fonctions. \n";
         echo " -c --no-colors Désactiver les couleurs. \n";
         echo " -M --makefile Activer la vérification du Makefile. \n";
