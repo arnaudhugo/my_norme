@@ -4,7 +4,8 @@
 run($argv[1]);
 
 function run($way) {
-    $listFile = array();
+    $list_file = array();
+
     if (!empty($way) && is_dir($way)) {
         if ($dh = opendir($way)) {
             while (($file = readdir($dh)) !== false) {
@@ -12,12 +13,12 @@ function run($way) {
                     $t = explode('.', $file);
                     $extension = end($t);
                     if ($extension == "c" || $extension == "h") {
-                        array_push($listFile, $file);
+                        array_push($list_file, $file);
                     }
                 }
             }
             closedir($dh);
-            start_scan($listFile, $way);
+            start_scan($list_file, $way);
         }
     }
     elseif ($way == "-h" || $way == "--help") {
@@ -34,46 +35,46 @@ function run($way) {
     }
 }
 
-function space_end($contenuLigne, $file_name, $nbLigne) {
-    if (substr($contenuLigne, -2, 2) == " \n") {
-        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbLigne : Espace en fin de ligne. \n";
+function space_end($line_content, $file_name, $nbr_line) {
+    if (substr($line_content, -2, 2) == " \n") {
+        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Espace en fin de ligne. \n";
         return(true);
     }
     return(false);
 }
 
-function define_in_c($contenuLigne, $file_name, $nbLigne) {
-    if (substr($file_name, -1, 1) == "c" && preg_match('(#define)', $contenuLigne)) {
-        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbLigne : Define dans un C. \n";
+function define_in_c($line_content, $file_name, $nbr_line) {
+    if (substr($file_name, -1, 1) == "c" && preg_match('(#define)', $line_content)) {
+        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Define dans un C. \n";
         return(true);
     }
     return(false);
 }
 
-function too_much_charac($contenuLigne, $file_name, $nbLigne) {
-    if (strlen($contenuLigne) > 80) {
-        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbLigne : Ligne de plus de 80 caractères. \n";
+function too_much_charac($line_content, $file_name, $nbr_line) {
+    if (strlen($line_content) > 80) {
+        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Ligne de plus de 80 caractères. \n";
         return(true);
     }
     return(false);
 }
 
-function space_miss_after_key_word($contenuLigne, $file_name, $nbLigne) {
-    if (preg_match('(\b(if|while|for|return)\()', $contenuLigne)) {
-        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbLigne : Espace manquant après mot clé. \n";
+function space_miss_after_key_word($line_content, $file_name, $nbr_line) {
+    if (preg_match('(\b(if|while|for|return)\()', $line_content)) {
+        echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Espace manquant après mot clé. \n";
         return(true);
     }
     return(false);
 }
 
-function space_miss_after_comma($contenuLigne, $file_name, $nbLigne) {
+function space_miss_after_comma($line_content, $file_name, $nbr_line) {
     $error = 0;
-    preg_match_all('/,./', $contenuLigne, $matches, PREG_SET_ORDER);
+    preg_match_all('/,./', $line_content, $matches, PREG_SET_ORDER);
 
     if (!empty($matches)) {
         for ($a = 0; $a < count($matches); $a++) {
             if ($matches[$a][0] != ", ") {
-                echo "\033[31m Erreur\033[0m : $file_name : ligne $nbLigne : Espace manquant après virgule. \n";
+                echo "\033[31m Erreur\033[0m : $file_name : ligne $nbr_line : Espace manquant après virgule. \n";
                 $error++;
             }
         }
@@ -82,126 +83,122 @@ function space_miss_after_comma($contenuLigne, $file_name, $nbLigne) {
 }
 
 // Verification
-function start_scan($listFile, $way) {
+function start_scan($list_file, $way) {
+    $nbr_error = 0;
+    $nbr_dossier = 0;
 
-    $nbError = 0;
-    $nbDossier = 0;
+    for ($i = 0; $i < count($list_file); $i++) {
+        $in_func = FALSE;
+        $line_in_func = 0;
+        $nbr_func = 0;
+        $tmp_line = 0;
+        $selected_file = $way . $list_file[$i];
+        $line = file($selected_file);
+        echo "\nScan: $list_file[$i] \n";
 
-    for ($i = 0; $i < count($listFile); $i++) {
-        $inFunc = FALSE;
-        $ligneInFunc = 0;
-        $nbFunc = 0;
-        $tmpL = 0;
-        $fichier = $way . $listFile[$i];
-        $ligne = file($fichier);
-        echo "\nScan: $listFile[$i] \n";
-        foreach ($ligne as $nbLigne => $contenuLigne) {
-            $nbLigne = $nbLigne + 1;
-            $file_name = $listFile[$i];
-
-            /*
-            if (preg_match('[d]', $contenuLigne)) {
-                echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : Contien : d \n";
-                $nbError++;
-            }*/
+        foreach ($line as $nbr_line => $line_content) {
+            $nbr_line = $nbr_line + 1;
+            $file_name = $list_file[$i];
 
             // ===== Define dans un C
-            if (define_in_c($contenuLigne, $file_name, $nbLigne))
-                $nbError++;
+            if (define_in_c($line_content, $file_name, $nbr_line))
+                $nbr_error++;
             // =========
 
             // ===== Espace en fin de ligne
-            if (space_end($contenuLigne, $file_name, $nbLigne))
-                $nbError++;
+            if (space_end($line_content, $file_name, $nbr_line))
+                $nbr_error++;
             // ==========
 
             // ===== Double retour à la ligne
-            if ($contenuLigne == "\n" && $tmpL == 0) {
-                $tmpL = $nbLigne;
+            if ($line_content == "\n" && $tmp_line == 0) {
+                $tmp_line = $nbr_line;
             }
-            if ($contenuLigne == "\n" && $tmpL == $nbLigne - 1) {
-                echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : Double retour à la ligne. \n";
-                $nbError++;
-                $tmpL = 0;
+            if ($line_content == "\n" && $tmp_line == $nbr_line - 1) {
+                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Double retour à la ligne. \n";
+                $nbr_error++;
+                $tmp_line = 0;
             }
             // ==========
 
             // ===== Ligne de plus de 80 caractères
-            if (too_much_charac($contenuLigne, $file_name, $nbLigne))
-                $nbError++;
+            if (too_much_charac($line_content, $file_name, $nbr_line))
+                $nbr_error++;
             // ==========
 
             // ===== Espace manquant après mot clé
-            if (space_miss_after_key_word($contenuLigne, $file_name, $nbLigne))
-                $nbError++;
+            if (space_miss_after_key_word($line_content, $file_name, $nbr_line))
+                $nbr_error++;
             // ==========
 
             // ===== Espace manquant après virgule
-            $nbError += space_miss_after_comma($contenuLigne, $file_name, $nbLigne);
+            $nbr_error += space_miss_after_comma($line_content, $file_name, $nbr_line);
             // ==========
 
             // ===== Mauvais header / Triche Edouard MOULINETTE
-            if ($nbDossier != sizeof($listFile)) {
-                if ($nbLigne >= 3 && $nbLigne <= 10) {
-                    if (preg_match('(\/\/)', $contenuLigne) == 1) {
-                        if (preg_match('(moulin_e@etna-alternance.net)', $contenuLigne)) {
-                            echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : TRICHE (moulin_e@etna-alternance.net). \n";
-                            $nbError++;
+            if ($nbr_dossier != sizeof($list_file)) {
+                if ($nbr_line >= 3 && $nbr_line <= 10) {
+                    if (preg_match('(\/\/)', $line_content) == 1) {
+                        if (preg_match('(moulin_e@etna-alternance.net)', $line_content)) {
+                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (moulin_e@etna-alternance.net). \n";
+                            $nbr_error++;
                         }
-                        if (preg_match('(MOULINETTE Edouard)', $contenuLigne)) {
-                            echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : TRICHE (MOULINETTE Edouard). \n";
-                            $nbError++;
+                        if (preg_match('(MOULINETTE Edouard)', $line_content)) {
+                            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : TRICHE (MOULINETTE Edouard). \n";
+                            $nbr_error++;
                         }
                     }
                     else {
-                        echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : Header oublié. \n";
-                        $nbError++;
+                        echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Header oublié. \n";
+                        $nbr_error++;
                     }
                 }
             }
             // =========
 
             // ===== Fonctions de plus de 25 lignes & Nombre de fonctions par fichier
-            if (preg_match('/^{/', $contenuLigne) && $inFunc == FALSE) {
-                $inFunc = TRUE;
+            if (preg_match('/^{/', $line_content) && $in_func == FALSE) {
+                $in_func = TRUE;
             }
-            elseif (preg_match('/^}/', $contenuLigne)) {
-                $inFunc = FALSE;
-                $nbFunc = $nbFunc + 1;
-                $ligneInFunc = 0;
+            elseif (preg_match('/^}/', $line_content)) {
+                $in_func = FALSE;
+                $nbr_func = $nbr_func + 1;
+                $line_in_func = 0;
             }
             else {
-                if ($inFunc == TRUE) {
-                    $ligneInFunc = $ligneInFunc + 1;
+                if ($in_func == TRUE) {
+                    $line_in_func = $line_in_func + 1;
                 }
-                if ($ligneInFunc > 25) {
-                    echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : Fonctions de plus de 25 lignes. \n";
-                    $nbError++;
+                if ($line_in_func > 25) {
+                    echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Fonctions de plus de 25 lignes. \n";
+                    $nbr_error++;
                 }
             }
             // ==========
 
             // ===== Plus de 4 paramètres pour une fonction
-            $nbParam = explode(',', $contenuLigne);
-            if (count($nbParam) > 4) {
-                echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : Plus de 4 paramètres pour une fonction. \n";
-                $nbError++;
+            $nbr_param = explode(',', $line_content);
+            if (count($nbr_param) > 4) {
+                echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Plus de 4 paramètres pour une fonction. \n";
+                $nbr_error++;
             }
             // ==========
         }
         // ===== Show NbFunc
-        if ($nbFunc > 5) {
-            echo "\033[31m Erreur\033[0m : $listFile[$i] : ligne $nbLigne : Il y a $nbFunc function dans le fichier. \n";
-            $nbError++;
-            $nbFunc = 0;
+        if ($nbr_func > 5) {
+            echo "\033[31m Erreur\033[0m : $list_file[$i] : ligne $nbr_line : Il y a $nbr_func function dans le fichier. \n";
+            $nbr_error++;
+            $nbr_func = 0;
         }
         // ==========
     }
-    if ($nbError == 0) {
+    // ===== Show NbError
+    if ($nbr_error == 0) {
         echo "\033[32mAucune fautes de normes\033[0m. \n";
     }
     else {
-        echo "Vous avez fait \033[31m$nbError\033[0m fautes de norme. \n";
+        echo "Vous avez fait \033[31m$nbr_error\033[0m fautes de norme. \n";
     }
+    // ==========
 }
 ?>
